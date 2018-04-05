@@ -1,0 +1,102 @@
+{{>licenseInfo}}
+
+package {{package}};
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+import org.junit.Test;
+import org.junit.Assert;
+
+{{^fullJavaUtil}}
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Arrays;
+{{/fullJavaUtil}}
+
+import sdk.fluig.com.core.rest.CallBackRequisition;
+import sdk.fluig.com.core.rest.CallBackObjectRequisition;
+import sdk.fluig.com.core.rest.RestClient;
+
+import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import org.junit.Before;
+
+import sdk.fluig.com.core.logging.LogSDK;
+import sdk.fluig.com.core.rest.RestClientUtils;
+
+/**
+ * API tests for {{classname}}
+ */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({LogSDK.class, RestClientUtils.class})
+public class {{classname}}Test {
+
+    @Before
+    public void init() {
+        MockitoAnnotations.initMocks(this);
+        PowerMockito.mockStatic(LogSDK.class);
+    }
+
+    {{#operations}}{{#operation}}
+
+    @Test
+    public void {{operationId}}Test() throws Exception {
+
+        PowerMockito.mockStatic(LogSDK.class);
+
+        final {{classname}} api = new {{classname}}();
+
+        {{#allParams}}
+        {{{dataType}}} {{paramName}} = {{#isBodyParam}} new {{{dataType}}}(){{/isBodyParam}}{{^isBodyParam}}{{#isString}}"stringParamenter"{{/isString}}{{^isString}}{{#isInteger}}1{{/isInteger}}{{^isInteger}}{{#isCollectionFormatMulti}}Arrays.asList("stringParamenter"){{/isCollectionFormatMulti}}{{^isCollectionFormatMulti}}null{{/isCollectionFormatMulti}}{{/isInteger}}{{/isString}}{{/isBodyParam}};
+        {{/allParams}}
+
+        {{#returnType}}CallBackRequisition<{{{returnType}}}> callBackRequisition {{/returnType}}{{^returnType}}CallBackObjectRequisition callBackRequisition{{/returnType}} = null;
+        
+        RestClient restClient = (RestClient) api.{{operationId}}({{#allParams}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}{{#hasParams}},{{/hasParams}} callBackRequisition);
+
+	    String[] localVarContentTypes = { {{#consumes}}"{{{mediaType}}}"{{#hasMore}},{{/hasMore}}{{/consumes}} };
+    
+    	String localVarContentType = localVarContentTypes.length > 0 ? localVarContentTypes[0] : "application/json";
+
+        Assert.assertTrue(restClient.getRestContract().getMethodHttpType().toString().equals("{{httpMethod}}"));
+
+        Assert.assertTrue(restClient.getRestContract().getContentType().equals(localVarContentType));
+
+		{{#hasHeaderParams}}
+        Assert.assertTrue(restClient.getRestContract().getHeaders().size() > 0);
+		{{/hasHeaderParams}}
+		{{^hasHeaderParams}}
+        Assert.assertTrue(restClient.getRestContract().getHeaders().size() == 0);
+		{{/hasHeaderParams}}
+
+		{{#hasQueryParams}}
+        Assert.assertTrue(restClient.getRestContract().getParams().size() > 0);
+		{{/hasQueryParams}}
+		{{^hasQueryParams}}
+        Assert.assertTrue(restClient.getRestContract().getParams().size() == 0);
+		{{/hasQueryParams}}
+		
+		{{#hasFormParams}}
+        Assert.assertTrue(restClient.getRestContract().getBodyparams().size() > 0);
+		{{/hasFormParams}}
+		{{^hasFormParams}}
+        Assert.assertTrue(restClient.getRestContract().getBodyparams().size() == 0);
+		{{/hasFormParams}}
+		
+		{{#hasBodyParam}}
+        Assert.assertTrue(restClient.getRestContract().getBinaryBodyParam() != null);
+		{{/hasBodyParam}}
+		{{^hasBodyParam}}
+        Assert.assertTrue(restClient.getRestContract().getBinaryBodyParam() == null);
+		{{/hasBodyParam}}
+
+    }
+    {{/operation}}{{/operations}}
+}

@@ -1,0 +1,108 @@
+{{>licenseInfo}}
+package {{invokerPackage}};
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import sdk.fluig.com.core.rest.model.BasicNameValuePair;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+
+public class ApiMapperUtils {
+
+  private static ApiMapperUtils INSTANCE = new ApiMapperUtils();
+
+  public static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
+  public static String escapeString(String str) {
+    
+    try {
+      return URLEncoder.encode(str, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      return str;
+    }
+    
+  }
+  
+  public static List<BasicNameValuePair> parameterToPairs(String collectionFormat, String name, Object value){
+
+    List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+
+    // preconditions
+    if (name == null || name.isEmpty() || value == null) return params;
+
+    Collection valueCollection = null;
+    if (value instanceof Collection) {
+      valueCollection = (Collection) value;
+    } else {
+      params.add(new BasicNameValuePair(name, parameterToString(value)));
+      return params;
+    }
+
+    if (valueCollection.isEmpty()){
+      return params;
+    }
+
+    // get the collection format
+    collectionFormat = (collectionFormat == null || collectionFormat.isEmpty() ? "csv" : collectionFormat); // default: csv
+
+    // create the params based on the collection format
+    if (collectionFormat.equals("multi")) {
+      for (Object item : valueCollection) {
+        params.add(new BasicNameValuePair(name, parameterToString(item)));
+      }
+
+      return params;
+    }
+
+    String delimiter = ",";
+
+    if (collectionFormat.equals("csv")) {
+      delimiter = ",";
+    } else if (collectionFormat.equals("ssv")) {
+      delimiter = " ";
+    } else if (collectionFormat.equals("tsv")) {
+      delimiter = "\t";
+    } else if (collectionFormat.equals("pipes")) {
+      delimiter = "|";
+    }
+
+    StringBuilder sb = new StringBuilder() ;
+    for (Object item : valueCollection) {
+      sb.append(delimiter);
+      sb.append(parameterToString(item));
+    }
+
+    params.add(new BasicNameValuePair(name, sb.substring(1)));
+
+    return params;
+  }
+  
+    public static String parameterToString(Object param) {
+    
+    if (param == null) {
+      return "";
+    } else if (param instanceof Date) {
+      return formatDateTime((Date) param);
+    } else if (param instanceof Collection) {
+      StringBuilder b = new StringBuilder();
+      for(Object o : (Collection)param) {
+        if(b.length() > 0) {
+          b.append(",");
+        }
+        b.append(String.valueOf(o));
+      }
+      return b.toString();
+    } else {
+      return String.valueOf(param);
+    }
+    
+  }
+  
+  public static String formatDateTime(Date datetime) {
+    return DATE_TIME_FORMAT.format(datetime);
+  }
+
+}
