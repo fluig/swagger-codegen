@@ -1,0 +1,21 @@
+{{#appName}}
+//
+//  {{appName}}.swift
+//  fluigSDKCore
+//
+//  Created by Marcelo on 09/10/17.
+//  Copyright © 2017 Totvs S.A. All rights reserved.
+//
+
+import Foundation
+ 
+public class FluigApi {}
+
+public extension FluigApi {
+    public enum {{useVersion}} {}
+}
+
+public extension FluigApi.{{useVersion}} {
+    public enum {{appName}} {}
+    public enum Models {}
+}{{/appName}}

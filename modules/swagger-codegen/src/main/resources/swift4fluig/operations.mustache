@@ -1,0 +1,75 @@
+{{#operations}}
+import Foundation
+
+public extension FluigApi.{{useVersion}}.{{appName}} {
+    public class {{baseName}}: Api {
+        let domain: String
+        public var authProvider: AuthenticationHeaderProvider?
+        public var cacheLoadPolicy: CacheLoadPolicy = .never
+
+        public required init(domain: String, authProvider: AuthenticationHeaderProvider?, cache: CacheLoadPolicy) {
+            self.domain = domain
+            self.authProvider = authProvider
+            self.cacheLoadPolicy = .never
+        }
+
+        public convenience init(domain: String) {
+            self.init(domain: domain, authProvider: FluigAuthenticationProvider()!, cache: .never)
+        }
+
+        {{#operation}}
+        {{#isEnum}}
+        /**
+        * enum for parameter {{paramName}}
+        */
+        public enum {{enumName}}_{{operationId}}: {{^isContainer}}{{{dataType}}}{{/isContainer}}{{#isContainer}}String{{/isContainer}} { {{#allowableValues}}{{#enumVars}}
+            case {{name}} = {{#isContainer}}"{{/isContainer}}{{#isString}}"{{/isString}}{{{value}}}{{#isString}}"{{/isString}}{{#isContainer}}"{{/isContainer}}{{/enumVars}}{{/allowableValues}}
+        }
+        {{/isEnum}}
+        {{/operation}}
+    }
+}
+
+public extension FluigApi.{{useVersion}}.{{appName}}.{{baseName}} {
+{{#operation}}
+    /**
+     {{#summary}}{{summary}}{{/summary}}
+    {{#allParams}}
+      - parameter {{paramName}}: ({{#isFormParam}}form{{/isFormParam}}{{#isQueryParam}}query{{/isQueryParam}}{{#isPathParam}}path{{/isPathParam}}{{#isHeaderParam}}header{{/isHeaderParam}}{{#isBodyParam}}body{{/isBodyParam}}) {{description}} {{^required}}(optional{{#defaultValue}}, default to {{{.}}}{{/defaultValue}}){{/required}}
+    {{/allParams}}
+      - parameter then: completion handler to receive the data/error
+    */
+    public func {{operationId}}({{#allParams}}{{paramName}}: {{#isEnum}}{{#isContainer}}{{{dataType}}}{{/isContainer}}{{^isContainer}}{{{datatypeWithEnum}}}_{{operationId}}{{/isContainer}}{{/isEnum}}{{^isEnum}}{{{dataType}}}{{/isEnum}}{{^required}}? = nil{{/required}}{{#hasMore}}, {{/hasMore}}{{/allParams}}{{#hasParams}}, {{/hasParams}}then: @escaping (Either<{{^returnType}}Void{{/returnType}}{{#returnType}}FluigApi.{{useVersion}}.Models.{{{returnType}}}{{/returnType}}>) -> Void) {
+        {{#hasFormParams}}
+        let data: RequestData = .formEncoded([
+            {{#formParams}}{{> pathparam}}{{#hasMore}}, {{/hasMore}}{{/formParams}}
+        ])
+        {{/hasFormParams}}
+        {{#hasQueryParams}}
+        let data: RequestData = .queryString([{{#queryParams}}("{{baseName}}", {{paramName}}){{#hasMore}}, {{/hasMore}}{{/queryParams}}])
+        {{/hasQueryParams}}
+        {{#hasBodyParam}}
+        {{#bodyParam}}
+        let d = try! JSONEncoder().encode({{paramName}})
+        let data: RequestData = .jsonData(d)
+        {{/bodyParam}}
+        {{/hasBodyParam}}
+        {{^hasFormParams}}
+        {{^hasQueryParams}}
+        {{^bodyParam}}
+        let data: RequestData = .none
+        {{/bodyParam}}
+        {{/hasQueryParams}}
+        {{/hasFormParams}}
+        let req = Request(domain: self.domain,
+                          path: "{{{path}}}",
+                          method: HttpMethod(rawValue: "{{httpMethod}}")!,
+                          {{#pathParams}}pathParams: [
+                              {{> pathparam}}{{#hasMore}}, {{/hasMore}}
+                          ],{{/pathParams}}
+                          authenticationProvider: self.authProvider
+        )
+    }
+{{/operation}}
+ }
+{{/operations}}
